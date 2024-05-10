@@ -8,6 +8,7 @@ export default function Home () {
   const inputFileRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setInterval(() => {
@@ -59,13 +60,14 @@ export default function Home () {
           setDrag(true);
           e.preventDefault();
         }} onDragLeave={() => setDrag(false)} onDrop={e => {
-          inputFileRef.current.files = e.dataTransfer.files;
           e.preventDefault();
+          inputFileRef.current.files = e.dataTransfer.files;
+          inputFileRef.current.form.requestSubmit();
         }}>
           <h2 style={{ marginTop: "0px" }}>Upload a File</h2>
           {loading ? <>
-            <p>Uploading...</p>
-            <progress value={95 - 2 ** (6.5 - (loadingProgress - loading) / 750)} max={100} />
+            <p>{loaded ? "Uploaded!" : "Uploading..."}</p>
+            <progress value={90 - 2 ** (6.5 - ((loadingProgress - loading) / 1000)) + (loaded ? ((loadingProgress - loaded) / 10) : 0)} max={100} />
           </> : <>
             <p style={{ margin: "0px" }}>Drag & drop or</p>
             <button style={{ marginTop: "4px" }} onClick={() => {
@@ -86,6 +88,8 @@ export default function Home () {
                 access: 'public',
                 handleUploadUrl: '/api/upload'
               });
+
+              setLoaded(Date.now());
 
               const { id } = await fetch("/api/save", {
                 headers: {
