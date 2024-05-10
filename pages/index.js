@@ -60,7 +60,6 @@ export default function Home () {
           e.preventDefault();
         }} onDragLeave={() => setDrag(false)} onDrop={e => {
           inputFileRef.current.files = e.dataTransfer.files;
-          inputFileRef.current.form.requestSubmit();
           e.preventDefault();
         }}>
           <h2 style={{ marginTop: "0px" }}>Upload a File</h2>
@@ -71,7 +70,6 @@ export default function Home () {
             <p style={{ margin: "0px" }}>Drag & drop or</p>
             <button style={{ marginTop: "4px" }} onClick={() => {
               inputFileRef.current.click();
-              inputFileRef.current.form.requestSubmit();
             }}>select from computer</button>
           </>}
 
@@ -104,7 +102,9 @@ export default function Home () {
               display: "none"
             }}
           >
-            <input name="file" ref={inputFileRef} type="file" />
+            <input name="file" ref={inputFileRef} type="file" onChange={e => {
+              e.target.form.requestSubmit();
+            }} />
           </form>
         </div>
         <div style={{
