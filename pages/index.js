@@ -6,6 +6,14 @@ export default function Home () {
   const [jobId, setJobId] = useState("");
   const [drag, setDrag] = useState(false);
   const inputFileRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  useEffect(() => {
+    setInterval(() => {
+      setLoadingProgress(Date.now());
+    }, 100);
+  });
 
   const router = useRouter();
 
@@ -20,7 +28,9 @@ export default function Home () {
       position: "absolute",
       inset: "0"
     }}>
-      <h1>Print</h1>
+      <h1 style={{
+        marginBottom: "0px"
+      }}>Print</h1>
       <p>Upload your files to print them on a shared computer.</p>
       <div style={{
         background: "var(--background-alt)",
@@ -54,14 +64,23 @@ export default function Home () {
           e.preventDefault();
         }}>
           <h2 style={{ marginTop: "0px" }}>Upload a File</h2>
-          <p style={{ margin: "0px" }}>Drag & drop or</p>
-          <button style={{ marginTop: "4px" }} onClick={() => {
-            inputFileRef.current.click();
-          }}>select from computer</button>
+          {loading ? <>
+            <p>Uploading...</p>
+            <progress value={95 - 2 ** (6.5 - (loadingProgress - loading) / 750)} max={100} />
+          </> : <>
+            <p style={{ margin: "0px" }}>Drag & drop or</p>
+            <button style={{ marginTop: "4px" }} onClick={() => {
+              inputFileRef.current.click();
+              inputFileRef.current.form.requestSubmit();
+            }}>select from computer</button>
+          </>}
 
           <form
             onSubmit={async (event) => {
               event.preventDefault();
+
+              setDrag(false);
+              setLoading(Date.now());
     
               const file = inputFileRef.current.files[0];
     
@@ -76,7 +95,7 @@ export default function Home () {
                 },
                 method: "POST",
                 body: JSON.stringify({
-                  blob: newBlob.url
+                  blob: newBlob
                 })
               }).then(res => res.json());
     

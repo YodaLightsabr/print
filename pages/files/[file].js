@@ -2,8 +2,60 @@ import { getFile } from "../api/file"
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { upload } from '@vercel/blob/client';
+import Link from "next/link";
 
-export default function File ({ url, id }) {
+export default function File ({ url, id, downloadUrl, error }) {
+  if (error) {
+    return (
+      <div style={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "absolute",
+        inset: "0"
+      }}>
+        <h1 style={{
+          marginBottom: "0px"
+        }}>Not Found</h1>
+        <p>The file by the ID <code>{id}</code> does not exist or has expired.</p>
+        
+        <Link href="/">
+          <button style={{
+            marginTop: "20px"
+          }}>Try again</button>
+        </Link>
+      </div>
+    )
+  }
+
+  const frameRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const fileUrl = URL.createObjectURL(blob);
+
+      frameRef.current.src = fileUrl;
+
+      frameRef.current.onload = () => {
+        if (!frameRef.current.contentDocument.head) return;
+        frameRef.current.contentDocument.head.innerHTML = /*html*/`
+          <style>
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+          </style>
+        `;
+      }
+    })();
+  })
+
   return (
     <div style={{
       width: "100vw",
@@ -15,7 +67,9 @@ export default function File ({ url, id }) {
       position: "absolute",
       inset: "0"
     }}>
-      <h1>Your File</h1>
+      <h1 style={{
+        marginBottom: "0px"
+      }}>Your File</h1>
       <p>Print it or download it</p>
       <div style={{
         background: "var(--background-alt)",
@@ -37,10 +91,27 @@ export default function File ({ url, id }) {
           width: "100%",
         }}>
           <h2 style={{ marginTop: "0px" }}>Download & Print</h2>
-          <a href={url} download target="_blank">
-            <button>Download</button>
-          </a>
 
+          <iframe ref={frameRef} scrolling="no" style={{
+            border: "none",
+            marginBottom: "16px",
+            pointerEvents: "none",
+            userSelect: "none"
+          }} />
+
+          <div style={{
+            display: "flex",
+            gap: "10px",
+            flexDirection: "row"
+          }}>
+            <a href={downloadUrl} download>
+              <button>Download</button>
+            </a>
+
+            <button onClick={() => {
+              frameRef.current.contentWindow.print();
+            }}>Print</button>
+          </div>
         </div>
         <div style={{
           width: "1px",
@@ -62,17 +133,25 @@ export default function File ({ url, id }) {
          
         </div>
       </div>
+
+      <Link href="/">
+        <button style={{
+          marginTop: "20px"
+        }}>Upload another file</button>
+      </Link>
     </div>
   )
 }
 
-export async function getServerSideProps ({ params }) {
-    const { blob } = await getFile(params.file);
+export async function getServerSideProps ({ params }, res) {
+    const blob = await getFile(params.file);
 
     return {
         props: {
+            error: blob === null,
             id: params.file,
-            url: blob
+            url: blob?.blob?.url || null,
+            downloadUrl: blob?.blob?.downloadUrl || null
         }
     }
 }
