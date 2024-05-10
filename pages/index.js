@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
+import { upload } from '@vercel/blob/client';
 
 export default function Home () {
   const [jobId, setJobId] = useState("");
+  const [drag, setDrag] = useState(false);
+  const inputFileRef = useRef(null);
+
+  const router = useRouter();
+
   return (
     <div style={{
       width: "100vw",
@@ -32,11 +39,54 @@ export default function Home () {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          width: "100%"
+          width: "100%",
+          ...(drag ? {
+            border: "3px dashed var(--links)"
+          } : {
+            border: "3px solid transparent"
+          })
+        }} onDragOver={e => {
+          setDrag(true);
+          e.preventDefault();
+        }} onDragLeave={() => setDrag(false)} onDrop={e => {
+          inputFileRef.current.files = e.dataTransfer.files;
+          inputFileRef.current.form.requestSubmit();
+          e.preventDefault();
         }}>
           <h2 style={{ marginTop: "0px" }}>Upload a File</h2>
           <p style={{ margin: "0px" }}>Drag & drop or</p>
-          <button style={{ marginTop: "4px" }}>select from computer</button>
+          <button style={{ marginTop: "4px" }} onClick={() => {
+            inputFileRef.current.click();
+          }}>select from computer</button>
+
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+    
+              const file = inputFileRef.current.files[0];
+    
+              const newBlob = await upload(file.name, file, {
+                access: 'public',
+                handleUploadUrl: '/api/upload'
+              });
+
+              const { id } = await fetch("/api/save", {
+                headers: {
+                  'Content-Type': "application/json"
+                },
+                method: "POST",
+                body: JSON.stringify({
+                  blob: newBlob.url
+                })
+              }).then(res => res.json());
+    
+              router.push(`/files/${id}`);
+            }} style={{
+              display: "none"
+            }}
+          >
+            <input name="file" ref={inputFileRef} type="file" />
+          </form>
         </div>
         <div style={{
           width: "1px",
@@ -54,9 +104,18 @@ export default function Home () {
           width: "100%"
         }}>
           <h2 style={{ marginTop: "0px" }}>Print a File</h2>
-      <input placeholder="Job ID" value={jobId} onChange={e => setJobId(e.target.value.toUpperCase().substring(0, 5))} style={{
-        textAlign: "center"
-      }} />
+          <p style={{ margin: "0px" }}>Enter the File ID</p>
+          <input placeholder="File ID" value={jobId} onChange={e => {
+            const id = e.target.value.toUpperCase().substring(0, 5);
+            setJobId(id);
+
+            if (id.length === 5) {
+              router.push(`/files/${id}`);
+            }
+          }} style={{
+            textAlign: "center",
+            marginTop: "4px"
+          }} />
         </div>
       </div>
     </div>
