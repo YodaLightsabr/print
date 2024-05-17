@@ -129,7 +129,9 @@ export default function Home () {
           <h2 style={{ marginTop: "0px" }}>Print a File</h2>
           <p style={{ margin: "0px" }}>Enter the File ID</p>
           <input placeholder="File ID" value={jobId} onChange={e => {
-            const id = e.target.value.toUpperCase().substring(0, 5);
+            let id = e.target.value;
+            id = id.split("").filter(c => "ABCDEFHJKLMNPQRTUVWXY0123456789".includes(c)).join("");
+            id = id.toUpperCase().substring(0, 5);
             setJobId(id);
 
             if (id.length === 5) {
