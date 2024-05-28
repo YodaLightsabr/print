@@ -130,7 +130,7 @@ export default function Home () {
           <p style={{ margin: "0px" }}>Enter the File ID</p>
           <input placeholder="File ID" value={jobId} onChange={e => {
             let id = e.target.value.toUpperCase();
-            id = id.split("").filter(c => "ABCDEFHJKLMNPQRTUVWXY0123456789".includes(c)).join("");
+            id = id.split("").filter(c => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".includes(c)).join("");
             id = id.substring(0, 5);
             setJobId(id);
 
