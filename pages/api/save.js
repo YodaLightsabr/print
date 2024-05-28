@@ -1,7 +1,7 @@
 import { kv } from "@vercel/kv";
 
 async function generateId () {
-    const id = Array.from({length: 5}, () => "ABCDEFHJKLMNPQRTUVWXY0123456789".charAt(Math.floor(Math.random() * 36))).join('');
+    const id = Array.from({length: 5}, () => "ABCDEFHJKLMNPQRTUVWXY0123456789".charAt(Math.floor(Math.random() * 31))).join('');
 
     if ((await kv.get(id))?.expires > Date.now()) return await generateId();
 
