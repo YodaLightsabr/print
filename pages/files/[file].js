@@ -144,12 +144,13 @@ export default function File ({ url, id, downloadUrl, error }) {
 }
 
 export async function getServerSideProps ({ params }, res) {
-    const blob = await getFile(params.file);
+    const id = params.file?.toUpperCase?.();
+    const blob = await getFile(id);
 
     return {
         props: {
             error: blob === null,
-            id: params.file,
+            id,
             url: blob?.blob?.url || null,
             downloadUrl: blob?.blob?.downloadUrl || null
         }
